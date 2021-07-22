@@ -260,7 +260,21 @@ export interface ILoaderServices {
  * Subset of IDocumentStorageService which only supports createBlob() and readBlob(). This is used to support
  * blobs in detached containers.
  */
+<<<<<<< HEAD
  export type IDetachedBlobStorage = Pick<IDocumentStorageService, "createBlob" | "readBlob">;
+=======
+export type IDetachedBlobStorage = Pick<IDocumentStorageService, "createBlob" | "readBlob"> & {
+    size: number;
+ };
+
+ /**
+ * To be included in the `IClientDetails.environment` value for the `IRequest` header
+ * if the client must be able to create a container at load when an existing container is not available.
+ *
+ * @deprecated - avoid using this flow, this key is only for temporarily supporting a legacy scenario.
+ */
+export const LegacyCreateOnLoadEnvironmentKey = "enable-legacy-create-on-load";
+>>>>>>> main
 
 /**
  * Manages Fluid resource loading
@@ -487,6 +501,10 @@ export class Loader implements IHostLoader {
                 resolvedUrl: resolved,
                 version: request.headers?.[LoaderHeader.version] ?? undefined,
                 loadMode: request.headers?.[LoaderHeader.loadMode],
+                createOnLoad: request.headers
+                    ?.[LoaderHeader.clientDetails]
+                    ?.environment
+                    ?.includes(LegacyCreateOnLoadEnvironmentKey),
             },
             pendingLocalState,
         );

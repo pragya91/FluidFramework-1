@@ -10,6 +10,11 @@ import { ISnapshotTree, ITree } from "@fluidframework/protocol-definitions";
 import { generateHandleContextPath } from "@fluidframework/runtime-utils";
 import { ITelemetryLogger } from "@fluidframework/common-definitions";
 import { assert, Deferred } from "@fluidframework/common-utils";
+<<<<<<< HEAD
+=======
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
+import { AttachState } from "@fluidframework/container-definitions";
+>>>>>>> main
 
 /**
  * This class represents blob (long string)
@@ -51,14 +56,23 @@ export class BlobManager {
     private readonly pendingBlobIds: Map<string, Deferred<void>> = new Map();
     private readonly blobIds: Set<string> = new Set();
 
+    public get blobCount() { return this.blobIds.size; }
+
     constructor(
         private readonly routeContext: IFluidHandleContext,
         private readonly getStorage: () => IDocumentStorageService,
         private readonly attachBlobCallback: (blobId: string) => void,
+<<<<<<< HEAD
         onceRuntimeDisposed: (fn: () => void) => void,
         private readonly logger: ITelemetryLogger,
     ) {
         onceRuntimeDisposed(() => {
+=======
+        private readonly runtime: IContainerRuntime,
+        private readonly logger: ITelemetryLogger,
+    ) {
+        this.runtime.once("dispose", () => {
+>>>>>>> main
             for (const promise of this.pendingBlobIds.values()) {
                 promise.reject(new Error("runtime disposed while blobAttach op in flight"));
             }
@@ -75,6 +89,10 @@ export class BlobManager {
     }
 
     public async createBlob(blob: ArrayBufferLike): Promise<IFluidHandle<ArrayBufferLike>> {
+        assert(
+            this.runtime.attachState !== AttachState.Attaching,
+            0x1f9 /* "createBlob() while attaching not supported" */,
+        );
         const response = await this.getStorage().createBlob(blob);
 
         const handle = new BlobHandle(
@@ -82,6 +100,10 @@ export class BlobManager {
             this.routeContext,
             async () => this.getStorage().readBlob(response.id),
         );
+
+        if (this.runtime.attachState === AttachState.Detached) {
+            return handle;
+        }
 
         // Note - server will de-dup blobs, so we might get existing blobId!
         if (this.pendingBlobIds.has(response.id)) {
@@ -98,7 +120,11 @@ export class BlobManager {
     }
 
     public processBlobAttachOp(blobId: string, local: boolean) {
+<<<<<<< HEAD
         assert(!local || this.pendingBlobIds.has(blobId), "local BlobAttach op with no pending blob");
+=======
+        assert(!local || this.pendingBlobIds.has(blobId), 0x1f8 /* "local BlobAttach op with no pending blob" */);
+>>>>>>> main
         this.pendingBlobIds.get(blobId)?.resolve();
         this.pendingBlobIds.delete(blobId);
         this.blobIds.add(blobId);

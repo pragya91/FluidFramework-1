@@ -5,7 +5,7 @@
 
 import { ITelemetryProperties } from "@fluidframework/common-definitions";
 import { DriverErrorType } from "@fluidframework/driver-definitions";
-import { LoggingError, TelemetryLogger } from "@fluidframework/telemetry-utils";
+import { annotateError, TelemetryLogger } from "@fluidframework/telemetry-utils";
 import {
     AuthorizationError,
     createGenericNetworkError,
@@ -93,8 +93,14 @@ export function createOdspNetworkError(
     retryAfterSeconds?: number,
     response?: Response,
     responseText?: string,
+<<<<<<< HEAD
 ): OdspError & LoggingError & IFacetCodes {
     let error: OdspError & LoggingError & IFacetCodes;
+=======
+    props: ITelemetryProperties = {},
+): Error & OdspError & IFacetCodes {
+    let error: Error & OdspError & IFacetCodes;
+>>>>>>> main
     switch (statusCode) {
         case 400:
             error = new GenericNetworkError(errorMessage, false, { statusCode });
@@ -155,14 +161,29 @@ export function createOdspNetworkError(
             const retryAfterMs = retryAfterSeconds !== undefined ? retryAfterSeconds * 1000 : undefined;
             error = createGenericNetworkError(errorMessage, true, retryAfterMs, { statusCode });
     }
+    enrichOdspError(error, response, responseText, props);
+    return error;
+}
 
+export function enrichOdspError(
+    error: OdspError & IFacetCodes,
+    response?: Response,
+    responseText?: string,
+    props: ITelemetryProperties = {},
+) {
     error.online = OnlineStatus[isOnline()];
 
     const facetCodes = responseText !== undefined ? parseFacetCodes(responseText) : undefined;
     error.facetCodes = facetCodes;
+<<<<<<< HEAD
 
     const props: ITelemetryProperties = { response: responseText,
         innerMostErrorCode: facetCodes !== undefined ? facetCodes[0] : undefined};
+=======
+    (error as any).response = responseText; // Issue #6139: This shouldn't be logged - will be fixed with #6485
+
+    props.innerMostErrorCode = facetCodes !== undefined ? facetCodes[0] : undefined;
+>>>>>>> main
     if (response) {
         props.responseType = response.type;
         if (response.headers) {
@@ -173,7 +194,7 @@ export function createOdspNetworkError(
             props.serverEpoch = response.headers.get("x-fluid-epoch") ?? undefined;
         }
     }
-    error.addTelemetryProperties(props);
+    annotateError(error, props);
     return error;
 }
 
@@ -193,7 +214,6 @@ export function throwOdspNetworkError(
         response,
         responseText);
 
-    // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw networkError;
 }
 

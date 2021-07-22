@@ -22,13 +22,13 @@ import {
     ContainerWarning,
     AttachState,
     ILoaderOptions,
+    IRuntimeFactory,
     ICodeLoader,
 } from "@fluidframework/container-definitions";
 import { IDocumentStorageService } from "@fluidframework/driver-definitions";
 import {
     IClientConfiguration,
     IClientDetails,
-    IDocumentAttributes,
     IDocumentMessage,
     IQuorum,
     ISequencedDocumentMessage,
@@ -53,7 +53,6 @@ export class ContainerContext implements IContainerContext {
         codeLoader: ICodeDetailsLoader | ICodeLoader,
         codeDetails: IFluidCodeDetails,
         baseSnapshot: ISnapshotTree | undefined,
-        attributes: IDocumentAttributes,
         deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
         quorum: IQuorum,
         loader: ILoader,
@@ -63,6 +62,7 @@ export class ContainerContext implements IContainerContext {
         closeFn: (error?: ICriticalContainerError) => void,
         version: string,
         updateDirtyContainerState: (dirty: boolean) => void,
+        existing: boolean,
         pendingLocalState?: unknown,
     ): Promise<ContainerContext> {
         const context = new ContainerContext(
@@ -71,7 +71,6 @@ export class ContainerContext implements IContainerContext {
             codeLoader,
             codeDetails,
             baseSnapshot,
-            attributes,
             deltaManager,
             quorum,
             loader,
@@ -81,8 +80,9 @@ export class ContainerContext implements IContainerContext {
             closeFn,
             version,
             updateDirtyContainerState,
+            existing,
             pendingLocalState);
-        await context.load();
+        await context.instantiateRuntime(existing);
         return context;
     }
 
@@ -98,14 +98,6 @@ export class ContainerContext implements IContainerContext {
 
     public get clientDetails(): IClientDetails {
         return this.container.clientDetails;
-    }
-
-    public get existing(): boolean | undefined {
-        return this.container.existing;
-    }
-
-    public get branch(): string {
-        return this.attributes.branch;
     }
 
     public get connected(): boolean {
@@ -167,7 +159,6 @@ export class ContainerContext implements IContainerContext {
         private readonly codeLoader: ICodeDetailsLoader | ICodeLoader,
         private readonly _codeDetails: IFluidCodeDetails,
         private readonly _baseSnapshot: ISnapshotTree | undefined,
-        private readonly attributes: IDocumentAttributes,
         public readonly deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
         public readonly quorum: IQuorum,
         public readonly loader: ILoader,
@@ -177,6 +168,7 @@ export class ContainerContext implements IContainerContext {
         public readonly closeFn: (error?: ICriticalContainerError) => void,
         public readonly version: string,
         public readonly updateDirtyContainerState: (dirty: boolean) => void,
+        public readonly existing: boolean,
         public readonly pendingLocalState?: unknown,
 
     ) {
@@ -281,22 +273,30 @@ export class ContainerContext implements IContainerContext {
         return true;
     }
 
-    // #region private
-    private attachListener() {
-        this.container.once("attaching", () => {
-            this._runtime?.setAttachState?.(AttachState.Attaching);
-        });
-        this.container.once("attached", () => {
-            this._runtime?.setAttachState?.(AttachState.Attached);
-        });
+    public notifyAttaching() {
+        this.runtime.setAttachState(AttachState.Attaching);
     }
 
-    private async load() {
-        const maybeFactory = (await this._fluidModuleP).module?.fluidExport?.IRuntimeFactory;
-        if (maybeFactory === undefined) {
+    // #region private
+
+    private async getRuntimeFactory(): Promise<IRuntimeFactory> {
+        const runtimeFactory = (await this._fluidModuleP).module?.fluidExport?.IRuntimeFactory;
+        if (runtimeFactory === undefined) {
             throw new Error(PackageNotFactoryError);
         }
-        this._runtime = await maybeFactory.instantiateRuntime(this);
+
+        return runtimeFactory;
+    }
+
+    private async instantiateRuntime(existing: boolean) {
+        const runtimeFactory = await this.getRuntimeFactory();
+        this._runtime = await runtimeFactory.instantiateRuntime(this, existing);
+    }
+
+    private attachListener() {
+        this.container.once("attached", () => {
+            this.runtime.setAttachState(AttachState.Attached);
+        });
     }
 
     private async loadCodeModule(codeDetails: IFluidCodeDetails) {
