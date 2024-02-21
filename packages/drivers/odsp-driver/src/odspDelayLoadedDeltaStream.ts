@@ -251,6 +251,9 @@ export class OdspDelayLoadedDeltaStream {
 		});
 	};
 
+	/**
+	 * Clears the timer set to refresh the connection with the server
+	 */
 	private clearJoinSessionTimer() {
 		if (this.joinSessionRefreshTimer !== undefined) {
 			clearTimeout(this.joinSessionRefreshTimer);
