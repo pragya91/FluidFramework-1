@@ -21,6 +21,7 @@ export interface HostStoragePolicy {
     // (undocumented)
     concurrentOpsBatches?: number;
     concurrentSnapshotFetch?: boolean;
+    disableRetriesOnStorageThrottlingError?: boolean;
     // @deprecated (undocumented)
     enableRedeemFallback?: boolean;
     // @deprecated (undocumented)

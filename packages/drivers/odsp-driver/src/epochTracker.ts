@@ -99,7 +99,7 @@ export class EpochTracker implements IPersistedFileCache {
 		protected readonly fileEntry: IFileEntry,
 		protected readonly logger: ITelemetryLoggerExt,
 		protected readonly clientIsSummarizer?: boolean,
-		protected readonly hostPolicy?: HostStoragePolicy
+		protected readonly hostPolicy?: HostStoragePolicy,
 	) {
 		// Limits the max number of concurrent requests to 24.
 		this.rateLimiter = new RateLimiter(24);
@@ -300,9 +300,10 @@ export class EpochTracker implements IPersistedFileCache {
 			.catch((error) => {
 				// If the error is about location redirection, then we need to generate new resolved url with correct
 				// location info.
-				if(isFluidError(error)){
-					if(error.errorType === OdspErrorTypes.fileNotFoundOrAccessDeniedError){
-						const redirectLocation = (error as IOdspErrorAugmentations).redirectLocation;
+				if (isFluidError(error)) {
+					if (error.errorType === OdspErrorTypes.fileNotFoundOrAccessDeniedError) {
+						const redirectLocation = (error as IOdspErrorAugmentations)
+							.redirectLocation;
 						if (redirectLocation !== undefined) {
 							const redirectUrl: IOdspResolvedUrl = patchOdspResolvedUrl(
 								this.fileEntry.resolvedUrl,
@@ -318,17 +319,25 @@ export class EpochTracker implements IPersistedFileCache {
 							);
 							throw locationRedirectionError;
 						}
-					}else if(error.errorType == OdspErrorTypes.throttlingError && this.hostPolicy?.disableRetriesOnStorageThrottlingError){
+					} else if (
+						error.errorType === OdspErrorTypes.throttlingError &&
+						this.hostPolicy?.disableRetriesOnStorageThrottlingError
+					) {
 						const nonRetriableThrottlingError = new NonRetryableError(
 							error.message,
 							OdspErrorTypes.throttlingError,
 							// retryAfterMs is still provided so that client app can can still use it.
 							{
-								retryAfterMs: (error as ThrottlingError).retryAfterSeconds !== undefined ? (error as ThrottlingError).retryAfterSeconds * 1000 : undefined,
-								driverVersion
+								retryAfterMs:
+									(error as ThrottlingError).retryAfterSeconds !== undefined
+										? (error as ThrottlingError).retryAfterSeconds * 1000
+										: undefined,
+								driverVersion,
 							},
 						);
-						nonRetriableThrottlingError.addTelemetryProperties(error.getTelemetryProperties());
+						nonRetriableThrottlingError.addTelemetryProperties(
+							error.getTelemetryProperties(),
+						);
 						throw nonRetriableThrottlingError;
 					}
 				}
@@ -644,14 +653,14 @@ export function createOdspCacheAndTracker(
 	fileEntry: IFileEntry,
 	logger: ITelemetryLoggerExt,
 	clientIsSummarizer?: boolean,
-	hostPolicy?: HostStoragePolicy
+	hostPolicy?: HostStoragePolicy,
 ): ICacheAndTracker {
 	const epochTracker = new EpochTrackerWithRedemption(
 		persistedCacheArg,
 		fileEntry,
 		logger,
 		clientIsSummarizer,
-		hostPolicy
+		hostPolicy,
 	);
 	return {
 		cache: {
