@@ -416,7 +416,7 @@ describe("Tests for Epoch Tracker", () => {
 				Promise.reject(
 					new ThrottlingError("Server is throttled", 1000, {
 						testProp: "testProp",
-						driverVersion: "123",
+						driverVersion: "1",
 					}),
 				),
 			);
@@ -450,7 +450,7 @@ describe("Tests for Epoch Tracker", () => {
 				Promise.reject(
 					new ThrottlingError("Server is throttled", 1000, {
 						testProp: "testProp",
-						driverVersion: "123",
+						driverVersion: "1",
 					}),
 				),
 			);
