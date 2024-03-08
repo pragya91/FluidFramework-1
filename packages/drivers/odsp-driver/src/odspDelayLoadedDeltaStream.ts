@@ -419,8 +419,7 @@ export class OdspDelayLoadedDeltaStream {
 			);
 			// If the response does not contain refreshSessionDurationSeconds, then treat it as old flow and let the
 			// cache entry to be treated as expired after 1 hour.
-			_response.joinSessionResponse.refreshSessionDurationSeconds =
-				_response.joinSessionResponse.refreshSessionDurationSeconds ?? 3600;
+			_response.joinSessionResponse.refreshSessionDurationSeconds = 30; // TODO FIX ME
 			return {
 				..._response,
 				refreshAfterDeltaMs: this.calculateJoinSessionRefreshDelta(

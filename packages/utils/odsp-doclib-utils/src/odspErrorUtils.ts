@@ -409,10 +409,11 @@ export function throwOdspNetworkError(
 	responseText?: string,
 	props?: ITelemetryProperties,
 ): never {
+	console.log(numberFromHeader(response.headers.get("retry-after")));
 	const networkError = createOdspNetworkError(
 		errorMessage,
 		statusCode,
-		numberFromHeader(response.headers.get("retry-after")) /* retryAfterSeconds */,
+		30 /* retryAfterSeconds */,
 		response,
 		responseText,
 		props,

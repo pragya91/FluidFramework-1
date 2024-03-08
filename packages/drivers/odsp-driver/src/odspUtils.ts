@@ -143,6 +143,20 @@ export async function fetchHelper(
 					response,
 					await response.text(),
 				);
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
+			} else if (`${requestInfo}`.includes("joinSession")) {
+				if (localStorage.getItem("test")) {
+					localStorage.removeItem("test");
+					throwOdspNetworkError(
+						// pre-0.58 error message prefix: odspFetchError
+						`ODSP fetch error [429]`,
+						429,
+						new Response(),
+						"text error",
+					);
+				} else {
+					localStorage.setItem("test", "abc");
+				}
 			}
 
 			const headers = headersToMap(response.headers);

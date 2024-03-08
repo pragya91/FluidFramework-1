@@ -321,10 +321,7 @@ export class EpochTracker implements IPersistedFileCache {
 						}
 					}
 					// If the hostPolicy disallows retries for throttling errors, then we throw a NonRetryableError
-					else if (
-						error.errorType === OdspErrorTypes.throttlingError &&
-						this.hostPolicy?.disableRetriesOnStorageThrottlingError
-					) {
+					else if (error.errorType === OdspErrorTypes.throttlingError) {
 						const nonRetriableThrottlingError = new NonRetryableError(
 							error.message,
 							OdspErrorTypes.throttlingError,
