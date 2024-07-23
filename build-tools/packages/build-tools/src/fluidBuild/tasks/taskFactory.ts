@@ -8,6 +8,7 @@ import { BuildPackage } from "../buildGraph";
 import { GroupTask } from "./groupTask";
 import { ApiExtractorTask } from "./leaf/apiExtractorTask";
 import { BiomeTask } from "./leaf/biomeTasks";
+import { DepcheckTask } from "./leaf/depcheckTasks";
 import { FlubCheckLayerTask, FlubCheckPolicyTask, FlubListTask } from "./leaf/flubTasks";
 import { GenerateEntrypointsTask } from "./leaf/generateEntrypointsTask.js";
 import { LeafTask, UnknownLeafTask } from "./leaf/leafTask";
@@ -56,6 +57,7 @@ const executableToLeafTask: {
 	"depcruise": DepCruiseTask,
 	"biome check": BiomeTask,
 	"biome format": BiomeTask,
+	"depcheck": DepcheckTask,
 
 	// Note that this assumes that "renamer" is ONLY used for renaming types. If it is used in a different task in the
 	// pipeline then this mapping will have to be updated.
