@@ -467,17 +467,14 @@ export class FluidDataStoreRuntime
 				// We use three non-overlapping namespaces:
 				// - detached state: even numbers
 				// - attached state: odd numbers
-				// - uuids
 				// In first two cases we will encode result as strings in more compact form, with leading underscore,
 				// to ensure no overlap with user-provided DDS names (see validateChannelId())
 				if (this.visibilityState !== VisibilityState.GloballyVisible) {
 					// container is detached, only one client observes content, no way to hit collisions with other clients.
 					id = encodeCompactIdToString(2 * this.contexts.size, "_");
 				} else {
-					// Due to back-compat, we could not depend yet on generateDocumentUniqueId() being there.
-					// We can remove the need to leverage uuid() as fall-back in couple releases.
 					const res =
-						this.dataStoreContext.containerRuntime.generateDocumentUniqueId?.() ?? uuid();
+						this.dataStoreContext.containerRuntime.generateDocumentUniqueId?.();
 					id = typeof res === "number" ? encodeCompactIdToString(2 * res + 1, "_") : res;
 				}
 			} else {
